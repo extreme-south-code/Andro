@@ -3,6 +3,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.myapplication.BottomBarScreen
+import com.example.myapplication.screens.HomeScreen
 
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
