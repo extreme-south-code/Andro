@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +39,7 @@ data class ListItem(
 )
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
-    var existingImages by remember { mutableStateOf<List<ListItem>>(emptyList()) }
+    var existingImages by rememberSaveable { mutableStateOf<List<ListItem>>(emptyList()) }
     var newImages by remember { mutableStateOf<List<ListItem>>(emptyList()) }
 
     val buttonText = if (maxSelectionCount > 1) {
