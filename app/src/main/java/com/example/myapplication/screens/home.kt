@@ -101,7 +101,6 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
             verticalItemSpacing = 20.dp
         ) {
             items(existingImages) { listItem ->
-                Log.d("LOG", "log")
                 GalleryImage(item = listItem)
             }
         }
