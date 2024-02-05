@@ -17,11 +17,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -29,13 +26,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.model.home.HomeListItem
+import com.example.myapplication.vm.home.HomeViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.random.Random
 
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
-    var existingImages by rememberSaveable { mutableStateOf<List<HomeListItem>>(emptyList()) }
-    var newImages by remember { mutableStateOf<List<HomeListItem>>(emptyList()) }
+fun HomeScreen(
+    homeViewModel: HomeViewModel = viewModel(),
+    maxSelectionCount: Int = 1
+) {
+    val existingImages by homeViewModel.existingImages.collectAsState()
 
     val buttonText = if (maxSelectionCount > 1) {
         "Select up to $maxSelectionCount photos"
@@ -46,13 +47,14 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            newImages = listOf(
-                HomeListItem(
-                    height = Random.nextInt(100, 300).dp,
-                    imageUri = uri
+            homeViewModel.addNewImages(
+                listOf(
+                    HomeListItem(
+                        height = Random.nextInt(100, 300).dp,
+                        imageUri = uri
+                    )
                 )
             )
-            existingImages = existingImages + newImages
         }
     )
 
@@ -61,13 +63,14 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
             maxItems = if (maxSelectionCount > 1) maxSelectionCount else 2
         ),
         onResult = { uris ->
-            newImages = uris.map { uri ->
-                HomeListItem(
-                    height = Random.nextInt(100, 300).dp,
-                    imageUri = uri
-                )
-            }
-            existingImages = existingImages + newImages
+            homeViewModel.addNewImages(
+                uris.map { uri ->
+                    HomeListItem(
+                        height = Random.nextInt(100, 300).dp,
+                        imageUri = uri
+                    )
+                }
+            )
         }
     )
 
@@ -83,7 +86,7 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
         }
     }
 
-    Column(modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize()) {
         Button(onClick = {
             launchPhotoPicker()
         }) {
@@ -91,7 +94,7 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
         }
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
-            modifier = modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(20.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalItemSpacing = 20.dp
