@@ -13,16 +13,21 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.model.home.HomeListItem
@@ -39,10 +44,13 @@ fun HomeScreen(
     val existingImages by homeViewModel.existingImages.collectAsState()
 
     val buttonText = if (maxSelectionCount > 1) {
-        "Select up to $maxSelectionCount photos"
+        "이미지 불러오기"
     } else {
-        "Select a photo"
+        "이미지 불러오기"
     }
+
+    val dialogShown = remember { mutableStateOf(false) }
+    val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -86,9 +94,26 @@ fun HomeScreen(
         }
     }
 
+    // show dialog
+    if (dialogShown.value) {
+        AlertDialog(
+            onDismissRequest = { dialogShown.value = false },
+            title = { Text(text = "알림")},
+            text = { Text(dialogMessage) },
+            confirmButton = {
+                Button(onClick = {
+                    dialogShown.value = false
+                    launchPhotoPicker()
+                }) {
+                    Text(text = "확인")
+                }
+            }
+        )
+    }
+
     Column(Modifier.fillMaxSize()) {
         Button(onClick = {
-            launchPhotoPicker()
+            dialogShown.value = true
         }) {
             Text(buttonText)
         }
