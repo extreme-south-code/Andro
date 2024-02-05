@@ -1,7 +1,6 @@
 package com.example.myapplication.screens
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,14 +32,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import kotlin.random.Random
 
-data class ListItem(
+data class HomeListItem(
     val height: Dp,
     val imageUri: Uri?,
 )
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
-    var existingImages by rememberSaveable { mutableStateOf<List<ListItem>>(emptyList()) }
-    var newImages by remember { mutableStateOf<List<ListItem>>(emptyList()) }
+    var existingImages by rememberSaveable { mutableStateOf<List<HomeListItem>>(emptyList()) }
+    var newImages by remember { mutableStateOf<List<HomeListItem>>(emptyList()) }
 
     val buttonText = if (maxSelectionCount > 1) {
         "Select up to $maxSelectionCount photos"
@@ -52,7 +51,7 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             newImages = listOf(
-                ListItem(
+                HomeListItem(
                     height = Random.nextInt(100, 300).dp,
                     imageUri = uri
                 )
@@ -67,7 +66,7 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
         ),
         onResult = { uris ->
             newImages = uris.map { uri ->
-                ListItem(
+                HomeListItem(
                     height = Random.nextInt(100, 300).dp,
                     imageUri = uri
                 )
@@ -110,7 +109,7 @@ fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
 
 @Composable
 fun GalleryImage(
-    item: ListItem,
+    item: HomeListItem,
     modifier: Modifier = Modifier
 ) {
     val painter = rememberAsyncImagePainter(model = item.imageUri)
