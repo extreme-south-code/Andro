@@ -1,6 +1,5 @@
 package com.example.myapplication.screens
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,15 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.model.home.HomeListItem
 import kotlin.random.Random
 
-data class HomeListItem(
-    val height: Dp,
-    val imageUri: Uri?,
-)
+
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, maxSelectionCount: Int = 1) {
     var existingImages by rememberSaveable { mutableStateOf<List<HomeListItem>>(emptyList()) }
