@@ -3,6 +3,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.myapplication.BottomBarScreen
+import com.example.myapplication.screens.HomeScreen
 
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
@@ -11,7 +12,7 @@ fun BottomNavGraph(navController: NavHostController) {
         startDestination = BottomBarScreen.Home.route
     ) {
         composable(route = BottomBarScreen.Home.route) {
-            HomeScreen()
+            HomeScreen(maxSelectionCount = 3)
         }
         composable(route = BottomBarScreen.Feed.route) {
             FeedScreen()
