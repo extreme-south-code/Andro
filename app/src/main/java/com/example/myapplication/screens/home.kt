@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.model.home.HomeListItem
@@ -51,6 +52,12 @@ fun HomeScreen(
 
     val dialogShown = remember { mutableStateOf(false) }
     val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
+
+    var isFirstTime = false
+
+    LaunchedEffect(Unit) {
+        isFirstTime = true
+    }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -103,6 +110,7 @@ fun HomeScreen(
             confirmButton = {
                 Button(onClick = {
                     dialogShown.value = false
+                    isFirstTime = false
                     launchPhotoPicker()
                 }) {
                     Text(text = "확인")
@@ -112,9 +120,20 @@ fun HomeScreen(
     }
 
     Column(Modifier.fillMaxSize()) {
-        Button(onClick = {
-            dialogShown.value = true
-        }) {
+        Button(
+            onClick = {
+                if (isFirstTime) {
+                    dialogShown.value = true
+                } else {
+                    dialogShown.value = false
+                    launchPhotoPicker()
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.LightGray,
+                contentColor = Color.Black,
+            )
+        ) {
             Text(buttonText)
         }
         LazyVerticalStaggeredGrid(
