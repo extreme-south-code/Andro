@@ -53,8 +53,6 @@ fun HomeScreen(
     val dialogShown by homeViewModel.dialogShown.collectAsState()
 
     val buttonText = "이미지 불러오기"
-
-//    val dialogShown = remember { mutableStateOf(false) }
     val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
 
     var isFirstTime = false
