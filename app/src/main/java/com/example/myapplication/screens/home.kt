@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -49,6 +48,36 @@ fun HomeScreen(
     val existingImages by homeViewModel.existingImages.collectAsState()
     val dialogShown by homeViewModel.dialogShown.collectAsState()
 
+    val addNewImages: (List<HomeListItem>) -> Unit = { newImages ->
+        homeViewModel.addNewImages(newImages)
+    }
+    val showDialog: () -> Unit = {
+        homeViewModel.showDialog()
+    }
+    val dismissDialog: () -> Unit = {
+        homeViewModel.dismissDialog()
+    }
+
+    HomeScreenContent(
+        existingImages = existingImages,
+        dialogShown = dialogShown,
+        addNewImages = addNewImages,
+        showDialog = showDialog,
+        dismissDialog = dismissDialog
+    )
+}
+
+
+@Composable
+private fun HomeScreenContent(
+    existingImages: List<HomeListItem>,
+    dialogShown: Boolean,
+    addNewImages: (List<HomeListItem>) -> Unit,
+    showDialog: () -> Unit,
+    dismissDialog: () -> Unit,
+    maxSelectionCount: Int = 10,
+) {
+
     val buttonText = "이미지 불러오기"
     val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
 
@@ -56,13 +85,6 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         isFirstTime.value = true
-    }
-
-    val scrollState = rememberLazyStaggeredGridState()
-
-    LaunchedEffect(scrollState.canScrollForward) {
-        // Scroll to the bottom when new images are added
-        scrollState.scrollToItem(existingImages.size - 1)
     }
 
     val scrollState = rememberLazyStaggeredGridState()
@@ -117,10 +139,13 @@ fun HomeScreen(
     // show dialog
     if (dialogShown) {
         AlertDialog(
+            onDismissRequest = { dismissDialog() },
             title = { Text(text = "알림")},
             text = { Text(dialogMessage) },
             confirmButton = {
                 Button(onClick = {
+                    dismissDialog()
+                    isFirstTime.value = false
                     launchPhotoPicker()
                 }) {
                     Text(text = "확인")
@@ -134,6 +159,10 @@ fun HomeScreen(
     ) {
         Button(
             onClick = {
+                if (isFirstTime.value) {
+                    showDialog()
+                } else {
+                    dismissDialog()
                     launchPhotoPicker()
                 }
             },
