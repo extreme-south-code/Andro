@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -43,11 +42,9 @@ import com.example.myapplication.vm.home.HomeViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.random.Random
 
-
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel(),
-    maxSelectionCount: Int = 1
 ) {
     val existingImages by homeViewModel.existingImages.collectAsState()
     val dialogShown by homeViewModel.dialogShown.collectAsState()
@@ -55,10 +52,17 @@ fun HomeScreen(
     val buttonText = "이미지 불러오기"
     val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
 
-    var isFirstTime = false
+    val isFirstTime = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        isFirstTime = true
+        isFirstTime.value = true
+    }
+
+    val scrollState = rememberLazyStaggeredGridState()
+
+    LaunchedEffect(scrollState.canScrollForward) {
+        // Scroll to the bottom when new images are added
+        scrollState.scrollToItem(existingImages.size - 1)
     }
 
     val scrollState = rememberLazyStaggeredGridState()
@@ -71,7 +75,7 @@ fun HomeScreen(
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            homeViewModel.addNewImages(
+            addNewImages(
                 listOf(
                     HomeListItem(
                         height = Random.nextInt(100, 300).dp,
@@ -87,7 +91,7 @@ fun HomeScreen(
             maxItems = if (maxSelectionCount > 1) maxSelectionCount else 2
         ),
         onResult = { uris ->
-            homeViewModel.addNewImages(
+            addNewImages(
                 uris.map { uri ->
                     HomeListItem(
                         height = Random.nextInt(100, 300).dp,
@@ -113,13 +117,10 @@ fun HomeScreen(
     // show dialog
     if (dialogShown) {
         AlertDialog(
-            onDismissRequest = { homeViewModel.dismissDialog() },
             title = { Text(text = "알림")},
             text = { Text(dialogMessage) },
             confirmButton = {
                 Button(onClick = {
-                    homeViewModel.dismissDialog()
-                    isFirstTime = false
                     launchPhotoPicker()
                 }) {
                     Text(text = "확인")
@@ -133,10 +134,6 @@ fun HomeScreen(
     ) {
         Button(
             onClick = {
-                if (isFirstTime) {
-                    homeViewModel.showDialog()
-                } else {
-                    homeViewModel.dismissDialog()
                     launchPhotoPicker()
                 }
             },
