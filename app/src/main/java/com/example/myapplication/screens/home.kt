@@ -171,7 +171,7 @@ private fun HomeScreenContent(
                 contentColor = Color.Black,
             ),
             modifier = Modifier
-                .padding(8.dp)
+                .padding(8.dp),
         ) {
             Text(buttonText)
         }
