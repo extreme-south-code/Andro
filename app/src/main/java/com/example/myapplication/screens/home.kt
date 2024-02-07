@@ -5,15 +5,17 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -32,7 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.HorizontalAlignmentLine
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,16 +50,22 @@ fun HomeScreen(
     maxSelectionCount: Int = 1
 ) {
     val existingImages by homeViewModel.existingImages.collectAsState()
+    val dialogShown by homeViewModel.dialogShown.collectAsState()
 
     val buttonText = "이미지 불러오기"
-
-    val dialogShown = remember { mutableStateOf(false) }
     val dialogMessage = "최대 $maxSelectionCount 개의 이미지를 불러올 수 있습니다."
 
     var isFirstTime = false
 
     LaunchedEffect(Unit) {
         isFirstTime = true
+    }
+
+    val scrollState = rememberLazyStaggeredGridState()
+
+    LaunchedEffect(scrollState.canScrollForward) {
+        // Scroll to the bottom when new images are added
+        scrollState.scrollToItem(existingImages.size - 1)
     }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
@@ -104,14 +111,14 @@ fun HomeScreen(
     }
 
     // show dialog
-    if (dialogShown.value) {
+    if (dialogShown) {
         AlertDialog(
-            onDismissRequest = { dialogShown.value = false },
+            onDismissRequest = { homeViewModel.dismissDialog() },
             title = { Text(text = "알림")},
             text = { Text(dialogMessage) },
             confirmButton = {
                 Button(onClick = {
-                    dialogShown.value = false
+                    homeViewModel.dismissDialog()
                     isFirstTime = false
                     launchPhotoPicker()
                 }) {
@@ -127,9 +134,9 @@ fun HomeScreen(
         Button(
             onClick = {
                 if (isFirstTime) {
-                    dialogShown.value = true
+                    homeViewModel.showDialog()
                 } else {
-                    dialogShown.value = false
+                    homeViewModel.dismissDialog()
                     launchPhotoPicker()
                 }
             },
@@ -158,9 +165,10 @@ fun HomeScreen(
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(20.dp),
+                    state = scrollState,
+                    contentPadding = PaddingValues(20.dp, 20.dp, 20.dp, 100.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
-                    verticalItemSpacing = 20.dp
+                    verticalItemSpacing = 20.dp,
                 ) {
                     items(existingImages) { listItem ->
                         GalleryImage(item = listItem)
