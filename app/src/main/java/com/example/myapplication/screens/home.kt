@@ -1,5 +1,6 @@
 package com.example.myapplication.screens
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -228,4 +230,23 @@ fun GalleryImage(
                 .clip(RoundedCornerShape(10))
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenContentPreview() {
+    val existingImages = listOf<HomeListItem>(
+        HomeListItem(height = 100.dp, imageUri = Uri.parse("https://i.pinimg.com/236x/26/cc/4f/26cc4f2ec693fb121ff082442cc462b5.jpg")),
+        HomeListItem(height = 150.dp, imageUri = Uri.parse("https://i.pinimg.com/236x/26/cc/4f/26cc4f2ec693fb121ff082442cc462b5.jpg")),
+        HomeListItem(height = 200.dp, imageUri = Uri.parse("https://i.pinimg.com/236x/26/cc/4f/26cc4f2ec693fb121ff082442cc462b5.jpg")),
+    )
+    val dialogShown = false
+
+    HomeScreenContent(
+        existingImages = existingImages,
+        dialogShown = dialogShown,
+        addNewImages = {},
+        showDialog = {},
+        dismissDialog = {}
+    )
 }
