@@ -12,6 +12,13 @@ class HomeViewModel : ViewModel() {
 
     private val _dialogShown = MutableStateFlow<Boolean>(false)
     val dialogShown: StateFlow<Boolean> = _dialogShown.asStateFlow()
+
+    private val _imageSliderShown = MutableStateFlow<Boolean>(false)
+    val imageSliderShown: StateFlow<Boolean> = _imageSliderShown.asStateFlow()
+
+    private val _imageSliderIndex = MutableStateFlow<Int?>(null)
+    val imageSliderIndex: StateFlow<Int?> = _imageSliderIndex.asStateFlow()
+
     fun addNewImages(newImages: List<HomeListItem>) {
         _existingImages.value += newImages
     }
@@ -22,5 +29,14 @@ class HomeViewModel : ViewModel() {
 
     fun dismissDialog() {
         _dialogShown.value = false
+    }
+
+    fun showImageSlider(imageIndex: Int) {
+        _imageSliderShown.value = true
+        _imageSliderIndex.value = imageIndex
+    }
+
+    fun dismissImageSlider() {
+        _imageSliderShown.value = false
     }
 }

@@ -1,54 +1,77 @@
 package com.example.myapplication.screens
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.model.home.HomeListItem
 import com.example.myapplication.vm.home.HomeViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.random.Random
-
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = viewModel(),
 ) {
     val existingImages by homeViewModel.existingImages.collectAsState()
     val dialogShown by homeViewModel.dialogShown.collectAsState()
+    val imageSliderShown by homeViewModel.imageSliderShown.collectAsState()
+    val imageSliderIndex by homeViewModel.imageSliderIndex.collectAsState()
+
+    // 상태로써 홈 화면의 블러 처리 여부 관리
+    val isHomeScreenBlurred = imageSliderShown
 
     val addNewImages: (List<HomeListItem>) -> Unit = { newImages ->
         homeViewModel.addNewImages(newImages)
@@ -60,12 +83,25 @@ fun HomeScreen(
         homeViewModel.dismissDialog()
     }
 
+    val showImageSlider: (Int) -> Unit = { imageIndex ->
+        homeViewModel.showImageSlider(imageIndex)
+    }
+
+    val dismissImageSlider: () -> Unit = {
+        homeViewModel.dismissImageSlider()
+    }
+
     HomeScreenContent(
         existingImages = existingImages,
         dialogShown = dialogShown,
+        imageSliderIndex = imageSliderIndex,
+        imageSliderShown = imageSliderShown,
+        isHomeScreenBlurred = isHomeScreenBlurred,
         addNewImages = addNewImages,
         showDialog = showDialog,
-        dismissDialog = dismissDialog
+        dismissDialog = dismissDialog,
+        showImageSlider = showImageSlider,
+        dismissImageSlider = dismissImageSlider,
     )
 }
 
@@ -74,9 +110,14 @@ fun HomeScreen(
 private fun HomeScreenContent(
     existingImages: List<HomeListItem>,
     dialogShown: Boolean,
+    imageSliderIndex: Int?,
+    imageSliderShown: Boolean,
+    isHomeScreenBlurred: Boolean, // 블러 처리 여부 상태
     addNewImages: (List<HomeListItem>) -> Unit,
     showDialog: () -> Unit,
     dismissDialog: () -> Unit,
+    showImageSlider: (Int) -> Unit,
+    dismissImageSlider: () -> Unit,
     maxSelectionCount: Int = 10,
 ) {
 
@@ -178,8 +219,15 @@ private fun HomeScreenContent(
             Text(buttonText)
         }
 
+        // Blur radius 값 설정
+        val blurredAlpha = if (isHomeScreenBlurred) 0.3f else 1f // 블러 적용 여부에 따라 투명도 조절
+
         Column(
-            Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    alpha = blurredAlpha // 블러 적용
+                },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -198,14 +246,31 @@ private fun HomeScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                     verticalItemSpacing = 20.dp,
                 ) {
-                    items(existingImages) { listItem ->
-                        GalleryImage(item = listItem)
+                    itemsIndexed(existingImages) {index, listItem ->
+                        GalleryImage(
+                            item = listItem,
+                            modifier = Modifier.clickable {
+                                // Show the image slider popup when an image is clicked
+                                showImageSlider(index)
+                            }
+                        )
                     }
+                }
+            }
+            // Show the dialog when dialog when dialogShown is true
+            if (imageSliderShown) {
+                imageSliderIndex?.let { index ->
+                    ImageSliderPopup(
+                        images = existingImages,
+                        initialImageIndex = index,
+                        onClose = dismissImageSlider
+                    )
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun GalleryImage(
@@ -232,6 +297,74 @@ fun GalleryImage(
     }
 }
 
+@Composable
+fun ImageSliderPopup(
+    images: List<HomeListItem>,
+    initialImageIndex: Int,
+    onClose: () -> Unit,
+    imageSize: Dp = 500.dp, // 원하는 이미지 크기
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+) {
+    var currentIndex by rememberSaveable {
+        mutableIntStateOf(initialImageIndex)
+    }
+    
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable { onClose() }
+    ) {
+        Dialog(onDismissRequest = onClose) {
+            Box(
+                modifier = modifier
+                    .padding(16.dp)
+                    .clip(shape = RoundedCornerShape(10.dp))
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(images[currentIndex].imageUri),
+                    contentDescription = null,
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .height(imageSize)
+                        .clickable { /* Do nothing when the image is clicked */ },
+                    contentScale = ContentScale.Crop,
+                )
+
+                // Left arrow
+                IconButton(
+                    onClick = { currentIndex =  (currentIndex - 1).coerceIn(0, images.size - 1) },
+                    modifier = modifier
+                        .align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Previous Image",
+                        modifier = modifier
+                            .size(48.dp),
+                        tint = Color.LightGray
+                    )
+                }
+
+                // Right arrow
+                IconButton(
+                    onClick = { currentIndex = (currentIndex + 1).coerceIn(0, images.size - 1) },
+                    modifier = modifier
+                        .align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "Next Image",
+                        modifier = modifier
+                            .size(48.dp),
+                        tint = Color.LightGray,
+                    )
+                }
+            }
+        }
+    }
+
+}
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenContentPreview() {
@@ -241,12 +374,19 @@ fun HomeScreenContentPreview() {
         HomeListItem(height = 200.dp, imageUri = Uri.parse("https://i.pinimg.com/236x/26/cc/4f/26cc4f2ec693fb121ff082442cc462b5.jpg")),
     )
     val dialogShown = false
+    val imageSliderShown = false
+    val imageSliderIndex = null
 
     HomeScreenContent(
         existingImages = existingImages,
         dialogShown = dialogShown,
+        imageSliderIndex = imageSliderIndex,
+        imageSliderShown = imageSliderShown,
+        isHomeScreenBlurred = imageSliderShown,
         addNewImages = {},
         showDialog = {},
-        dismissDialog = {}
+        dismissDialog = {},
+        showImageSlider = {},
+        dismissImageSlider = {},
     )
 }
