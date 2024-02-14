@@ -331,33 +331,37 @@ fun ImageSliderPopup(
                 )
 
                 // Left arrow
-                IconButton(
-                    onClick = { currentIndex =  (currentIndex - 1).coerceIn(0, images.size - 1) },
-                    modifier = modifier
-                        .align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Previous Image",
+                if (currentIndex > 0) {
+                    IconButton(
+                        onClick = { currentIndex =  (currentIndex - 1).coerceIn(0, images.size - 1) },
                         modifier = modifier
-                            .size(48.dp),
-                        tint = Color.LightGray
-                    )
+                            .align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Previous Image",
+                            modifier = modifier
+                                .size(48.dp),
+                            tint = Color.LightGray
+                        )
+                    }
                 }
 
-                // Right arrow
-                IconButton(
-                    onClick = { currentIndex = (currentIndex + 1).coerceIn(0, images.size - 1) },
-                    modifier = modifier
-                        .align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Next Image",
+                if (currentIndex < images.size - 1) {
+                    // Right arrow
+                    IconButton(
+                        onClick = { currentIndex = (currentIndex + 1).coerceIn(0, images.size - 1) },
                         modifier = modifier
-                            .size(48.dp),
-                        tint = Color.LightGray,
-                    )
+                            .align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Next Image",
+                            modifier = modifier
+                                .size(48.dp),
+                            tint = Color.LightGray,
+                        )
+                    }
                 }
             }
         }
