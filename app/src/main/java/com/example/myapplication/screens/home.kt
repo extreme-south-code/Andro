@@ -260,7 +260,7 @@ private fun HomeScreenContent(
             // Show the dialog when dialog when dialogShown is true
             if (imageSliderShown) {
                 imageSliderIndex?.let { index ->
-                    ImageSliderPopup(
+                    ImageDialogPopup(
                         images = existingImages,
                         initialImageIndex = index,
                         onClose = dismissImageSlider
@@ -298,7 +298,7 @@ fun GalleryImage(
 }
 
 @Composable
-fun ImageSliderPopup(
+fun ImageDialogPopup(
     images: List<HomeListItem>,
     initialImageIndex: Int,
     onClose: () -> Unit,
